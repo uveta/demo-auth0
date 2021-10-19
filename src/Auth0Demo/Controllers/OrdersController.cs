@@ -16,7 +16,7 @@ namespace Auth0Demo.Controllers
             return new List<OrderModel>();
         }
 
-        [HttpGet]
+        [HttpPost]
         [Authorize(Policies.OrdersFull)]
         public OrderModel CreateOrders()
         {

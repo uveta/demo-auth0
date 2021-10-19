@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
@@ -28,11 +30,13 @@ namespace Auth0Demo
             services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultSignInScheme = JwtBearerDefaults.AuthenticationScheme;
                 options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
             }).AddJwtBearer(options =>
             {
                 options.Authority = "https://uveta-demo-auth0.eu.auth0.com/";
                 options.Audience = "https://demo/api";
+                options.RequireHttpsMetadata = false;
             });
 
             services.AddAuthorization(authorization =>
@@ -58,6 +62,23 @@ namespace Auth0Demo
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Auth0 Demo API", Version = "v1" });
+                c.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
+                {
+                    Type = SecuritySchemeType.OAuth2,
+                    Flows = new OpenApiOAuthFlows()
+                    {
+                        Implicit = new OpenApiOAuthFlow()
+                        {
+                            AuthorizationUrl = new Uri("https://uveta-demo-auth0.eu.auth0.com/authorize"),
+                            Scopes = new Dictionary<string, string>
+                            {
+                                ["orders:read"] = "Read orders",
+                                ["orders:full"] = "Full access to orders"
+                            }
+                        }
+                    }
+                });
+                c.OperationFilter<SecurityRequirementsOperationFilter>();
             });
 
             // In production, the React files will be served from this directory
@@ -84,17 +105,20 @@ namespace Auth0Demo
 
             app.UseRouting();
 
+            app.UseAuthentication();
+            app.UseAuthorization();
+
             app.UseSwagger();
             app.UseSwaggerUI(c =>
             {
                 c.SwaggerEndpoint("v1/swagger.json", "Auth0 Demo API V1");
+                c.OAuthClientId("HvZbHkgYg17ZyU4bZ8KgYVC4i7tChnP9");
+                c.OAuth2RedirectUrl("http://localhost:5000/oauth2-redirect.html");
             });
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapControllerRoute(
-                    name: "default",
-                    pattern: "{controller}/{action=Index}/{id?}");
+                endpoints.MapDefaultControllerRoute();
             });
 
             app.UseSpa(spa =>
