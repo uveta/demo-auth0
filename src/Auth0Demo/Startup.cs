@@ -4,6 +4,7 @@ using System.Linq;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -27,23 +28,24 @@ namespace Auth0Demo
 
             services.AddControllersWithViews();
 
+            const string authority = "https://uveta-demo-auth0.eu.auth0.com/";
+            const string audience = "https://demo/api";
+
             services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultSignInScheme = JwtBearerDefaults.AuthenticationScheme;
                 options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
             }).AddJwtBearer(options =>
             {
-                options.Authority = "https://uveta-demo-auth0.eu.auth0.com/";
-                options.Audience = "https://demo/api";
-                options.RequireHttpsMetadata = false;
+                options.Authority = authority;
+                options.Audience = audience;
             });
 
             services.AddAuthorization(authorization =>
             {
                 authorization.AddPolicy(Policies.OrdersFull, policy =>
                 {
-                    policy.RequireClaim("scope", "orders:full");
+                    policy.RequireClaim("permissions", "orders:full");
                 });
                 authorization.AddPolicy(Policies.OrdersRead, policy =>
                 {
@@ -53,7 +55,7 @@ namespace Auth0Demo
                         var claims = user?.Claims;
                         if (claims is null) return false;
                         return claims
-                            .Where(c => c.Type == "scope")
+                            .Where(c => c.Type == "permissions")
                             .Any(c => c.Value == "orders:full" || c.Value == "orders:read");
                     });
                 });
@@ -65,20 +67,28 @@ namespace Auth0Demo
                 c.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
                 {
                     Type = SecuritySchemeType.OAuth2,
-                    Flows = new OpenApiOAuthFlows()
+                    Flows = new OpenApiOAuthFlows
                     {
-                        Implicit = new OpenApiOAuthFlow()
+                        Implicit = new OpenApiOAuthFlow
                         {
-                            AuthorizationUrl = new Uri("https://uveta-demo-auth0.eu.auth0.com/authorize"),
+                            AuthorizationUrl = new Uri(
+                                authority
+                                + "authorize"
+                                + new QueryBuilder(new Dictionary<string, string>() { ["audience"] = audience })
+                                    .ToQueryString()
+                                    .ToString()),
                             Scopes = new Dictionary<string, string>
                             {
+                                ["openid"] = "openid",
+                                ["profile"] = "profile",
+                                ["email"] = "email",
                                 ["orders:read"] = "Read orders",
                                 ["orders:full"] = "Full access to orders"
                             }
                         }
                     }
                 });
-                c.OperationFilter<SecurityRequirementsOperationFilter>();
+                c.OperationFilter<AuthorizeCheckOperationFilter>();
             });
 
             // In production, the React files will be served from this directory
@@ -111,14 +121,14 @@ namespace Auth0Demo
             app.UseSwagger();
             app.UseSwaggerUI(c =>
             {
-                c.SwaggerEndpoint("v1/swagger.json", "Auth0 Demo API V1");
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Auth0 Demo API V1");
                 c.OAuthClientId("HvZbHkgYg17ZyU4bZ8KgYVC4i7tChnP9");
-                c.OAuth2RedirectUrl("http://localhost:5000/oauth2-redirect.html");
+                // c.OAuth2RedirectUrl("http://localhost:5000/swagger/oauth2-redirect.html");
             });
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapDefaultControllerRoute();
+                endpoints.MapControllers();
             });
 
             app.UseSpa(spa =>
