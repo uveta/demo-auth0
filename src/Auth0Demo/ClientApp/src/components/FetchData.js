@@ -17,7 +17,7 @@ const FetchData = () => {
     };
 
     fetchData();
-  }, []);
+  }, [getAccessTokenSilently]);
 
   return (
     <div>
