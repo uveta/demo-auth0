@@ -25,8 +25,14 @@ namespace Auth0Demo
 
             if (context.ApiDescription.ActionDescriptor is ControllerActionDescriptor actionDescriptor)
             {
-                authorizeAttributes.AddRange(actionDescriptor.ControllerTypeInfo.GetCustomAttributes(true).OfType<AuthorizeAttribute>());
-                authorizeAttributes.AddRange(actionDescriptor.MethodInfo.GetCustomAttributes(true).OfType<AuthorizeAttribute>());
+                authorizeAttributes.AddRange(actionDescriptor
+                    .ControllerTypeInfo
+                    .GetCustomAttributes(true)
+                    .OfType<AuthorizeAttribute>());
+                authorizeAttributes.AddRange(actionDescriptor
+                    .MethodInfo
+                    .GetCustomAttributes(true)
+                    .OfType<AuthorizeAttribute>());
             }
 
             if (authorizeAttributes.Count > 0)
@@ -50,8 +56,8 @@ namespace Auth0Demo
                     if (claimRequirements.Count == 0)
                     {
                         // TODO: how to get required scopes when defined by handler?
-                        scopes.Add("orders:read");
-                        scopes.Add("orders:full");
+                        scopes.Add("forecast:read");
+                        scopes.Add("forecast:full");
                     }
                     else
                     {

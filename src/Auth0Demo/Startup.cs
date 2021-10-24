@@ -43,11 +43,11 @@ namespace Auth0Demo
 
             services.AddAuthorization(authorization =>
             {
-                authorization.AddPolicy(Policies.OrdersFull, policy =>
+                authorization.AddPolicy(Policies.ForecastFull, policy =>
                 {
-                    policy.RequireClaim("permissions", "orders:full");
+                    policy.RequireClaim("permissions", "forecast:full");
                 });
-                authorization.AddPolicy(Policies.OrdersRead, policy =>
+                authorization.AddPolicy(Policies.ForecastRead, policy =>
                 {
                     policy.RequireAssertion(context =>
                     {
@@ -56,7 +56,7 @@ namespace Auth0Demo
                         if (claims is null) return false;
                         return claims
                             .Where(c => c.Type == "permissions")
-                            .Any(c => c.Value == "orders:full" || c.Value == "orders:read");
+                            .Any(c => c.Value == "forecast:full" || c.Value == "forecast:read");
                     });
                 });
             });
@@ -82,8 +82,8 @@ namespace Auth0Demo
                                 ["openid"] = "openid",
                                 ["profile"] = "profile",
                                 ["email"] = "email",
-                                ["orders:read"] = "Read orders",
-                                ["orders:full"] = "Full access to orders"
+                                ["forecast:read"] = "Read forecast",
+                                ["forecast:full"] = "Full access to forecast"
                             }
                         }
                     }

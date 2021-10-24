@@ -2,7 +2,7 @@ namespace Auth0Demo
 {
     public class Policies
     {
-        public const string OrdersFull = "orders:full";
-        public const string OrdersRead = "orders:read";
+        public const string ForecastRead = "forecast:read";
+        public const string ForecastFull = "forecast:full";
     }
 }

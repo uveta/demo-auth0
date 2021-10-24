@@ -16,7 +16,7 @@ ReactDOM.render(
       clientId="HvZbHkgYg17ZyU4bZ8KgYVC4i7tChnP9"
       redirectUri={window.location.origin}
       audience="https://demo/api"
-      scope="openid profile email orders:read orders:full"
+      scope="openid profile email counter:full forecast:full"
     >
       <App />
     </Auth0Provider>
